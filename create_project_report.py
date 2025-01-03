@@ -8,6 +8,8 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from datetime import datetime
 from reportlab.lib.colors import HexColor
+import re
+
 
 def draw_detail_page(c, title, details, page_number):
     """Helper function to draw detail pages"""
@@ -38,6 +40,29 @@ def draw_detail_page(c, title, details, page_number):
         y -= 20
 
 import re
+
+def extract_test_results(testing_log):
+    # Open the testing log file and read its content
+    with open(testing_log, 'r') as f:
+        log_content = f.read()
+
+    # Look for the line that contains test results, like: "Ran 4 tests in 0.006s"
+    match = re.search(r'Ran (\d+) tests? in.*\s*(OK|FAILED)', log_content)
+    
+    if match:
+        total_tests = int(match.group(1))  # Extract total tests
+        result = match.group(2)  # Extract the result (OK or FAILED)
+        
+        # If the result is 'OK', we assume all tests passed
+        if result == 'OK':
+            passed_tests = total_tests
+            return f"OK {passed_tests}/{total_tests}"
+        else:
+            # If the result is 'FAILED', we consider it as 'NOT OK'
+            return f"NOT OK {passed_tests}/{total_tests}"
+    else:
+        return "NOT OK 0/0"  # In case the log format is unexpected or empty
+
 
 def extract_test_results(testing_log):
     # Open the testing log file and read its content
@@ -177,6 +202,7 @@ def generate_pdf(benchmarking_done, testing_done, deprecated_check_done, sonar_a
 
     c.save()
     return pdf_filename
+
 
 
 def send_email(pdf_filename, admin_email):
