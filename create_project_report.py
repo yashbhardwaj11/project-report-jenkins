@@ -57,12 +57,13 @@ def generate_pdf(benchmarking_done, testing_done, deprecated_check_done, sonar_a
     col_width = table_width / 2
     margin = 50
     
+    # Replace True/False with "OK"/"NOT OK"
     data = [
         ["Parameter", "Status"],
-        ["Benchmarking Done", benchmarking_done],
-        ["Testing Done", testing_done],
-        ["Deprecated Check Done", deprecated_check_done],
-        ["Sonar Analysis Done", sonar_analysis_done]
+        ["Benchmarking Done", "OK" if benchmarking_done == 'true' else "NOT OK"],
+        ["Testing Done", "OK" if testing_done == 'true' else "NOT OK"],
+        ["Deprecated Check Done", "OK" if deprecated_check_done == 'true' else "NOT OK"],
+        ["Sonar Analysis Done", "OK" if sonar_analysis_done == 'true' else "NOT OK"]
     ]
     
     # Calculate table dimensions
@@ -149,6 +150,7 @@ def generate_pdf(benchmarking_done, testing_done, deprecated_check_done, sonar_a
 
     c.save()
     return pdf_filename
+
 
 def send_email(pdf_filename, admin_email):
     sender_email = "technowebofficial01@gmail.com"
