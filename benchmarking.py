@@ -13,9 +13,9 @@ def print_benchmarking_data(file_name):
         print("\n".join([str(header) for header in headers]))  # Convert headers to strings before joining
 
         for row in sheet.iter_rows(min_row=2, values_only=True):
-            # Convert all values to strings before printing
             for header, value in zip(headers, row):
-                print(f"{header}: {str(value)}")  # Convert value to string
+                # Ensure that each value is printed without leading or trailing whitespace
+                print(f"{header}: {str(value).strip()}")
             print()  # Add a blank line between entries
     except FileNotFoundError:
         print(f"Error: File '{file_name}' not found.")
