@@ -112,10 +112,10 @@ def generate_pdf(benchmarking_done, testing_done, deprecated_check_done, sonar_a
     # Replace True/False with "OK"/"NOT OK"
     data = [
         ["Parameter", "Status"],
-        ["Benchmarking Done", "OK" if benchmarking_done == 'true' else "NOT OK"],
-        ["Testing Done", test_result],  # Display test result here
-        ["Deprecated Check Done", "OK" if deprecated_check_done == 'true' else "NOT OK"],
-        ["Sonar Analysis Done", "OK" if sonar_analysis_done == 'true' else "NOT OK"]
+        ["Benchmarking", "OK" if benchmarking_done == 'true' else "NOT OK"],
+        ["Testing", test_result],  # Display test result here
+        ["Deprecated Check", "OK" if deprecated_check_done == 'true' else "NOT OK"],
+        ["Sonar Analysis", "OK" if sonar_analysis_done == 'true' else "NOT OK"]
     ]
     
     # Calculate table dimensions
