@@ -37,6 +37,30 @@ def draw_detail_page(c, title, details, page_number):
         c.drawString(50, y, detail.strip())  # Strip to remove extra newlines
         y -= 20
 
+import re
+
+def extract_test_results(testing_log):
+    # Open the testing log file and read its content
+    with open(testing_log, 'r') as f:
+        log_content = f.read()
+
+    # Look for the line that contains test results, like: "Ran 4 tests in 0.006s"
+    match = re.search(r'Ran (\d+) tests? in.*\s*(OK|FAILED)', log_content)
+    
+    if match:
+        total_tests = int(match.group(1))  # Extract total tests
+        result = match.group(2)  # Extract the result (OK or FAILED)
+        
+        # If the result is 'OK', we assume all tests passed
+        if result == 'OK':
+            passed_tests = total_tests
+            return f"OK {passed_tests}/{total_tests}"
+        else:
+            # If the result is 'FAILED', we consider it as 'NOT OK'
+            return f"NOT OK {passed_tests}/{total_tests}"
+    else:
+        return "NOT OK 0/0"  # In case the log format is unexpected or empty
+
 def generate_pdf(benchmarking_done, testing_done, deprecated_check_done, sonar_analysis_done, admin_email, benchmarking_log, testing_log, deprecated_check_log, sonar_analysis_log):
     pdf_filename = '/tmp/report.pdf'
     c = canvas.Canvas(pdf_filename, pagesize=letter)
@@ -57,11 +81,14 @@ def generate_pdf(benchmarking_done, testing_done, deprecated_check_done, sonar_a
     col_width = table_width / 2
     margin = 50
     
+    # Extract testing result in the format "OK 4/4"
+    test_result = extract_test_results(testing_log)
+
     # Replace True/False with "OK"/"NOT OK"
     data = [
         ["Parameter", "Status"],
         ["Benchmarking Done", "OK" if benchmarking_done == 'true' else "NOT OK"],
-        ["Testing Done", "OK" if testing_done == 'true' else "NOT OK"],
+        ["Testing Done", test_result],  # Display test result here
         ["Deprecated Check Done", "OK" if deprecated_check_done == 'true' else "NOT OK"],
         ["Sonar Analysis Done", "OK" if sonar_analysis_done == 'true' else "NOT OK"]
     ]
