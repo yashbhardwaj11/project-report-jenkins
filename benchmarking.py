@@ -1,14 +1,14 @@
 import pandas as pd
 
-# Function to calculate the average benchmarking results
-def calculate_avg_benchmarking(file_path):
+# Function to fetch benchmarking parameters and their values
+def fetch_benchmarking_data(file_path):
     # Read the Excel file
     df = pd.read_excel(file_path)
 
     # Clean the column names by stripping any leading/trailing spaces
     df.columns = df.columns.str.strip()
 
-    # List of the benchmark parameters for which we need to calculate the average
+    # List of the benchmark parameters to fetch
     benchmarking_params = [
         'CPU Cores (mCpu)',
         'RAM (MiB)',
@@ -19,26 +19,25 @@ def calculate_avg_benchmarking(file_path):
         'Error Rate'
     ]
 
-    # Calculate and print the average for each parameter
-    averages = {}
+    # Fetch the parameters and their values
+    results = {}
     for param in benchmarking_params:
         if param in df.columns:
-            avg_value = df[param].mean()
-            averages[param] = avg_value
+            results[param] = df[param].tolist()  # Get all values as a list
         else:
-            averages[param] = "Column not found"
+            results[param] = "Column not found"
 
-    return averages
+    return results
 
 # Main function
 if __name__ == "__main__":
     # Path to the benchmarking.xlsx file
     file_path = 'benchmarking.xlsx'
 
-    # Calculate average benchmarking results
-    avg_results = calculate_avg_benchmarking(file_path)
+    # Fetch benchmarking data
+    benchmarking_data = fetch_benchmarking_data(file_path)
 
     # Print the results
-    print("Average Benchmarking Results:")
-    for param, avg in avg_results.items():
-        print(f"{param}: {avg}")
+    print("Benchmarking Data:")
+    for param, values in benchmarking_data.items():
+        print(f"{param}: {values}")
