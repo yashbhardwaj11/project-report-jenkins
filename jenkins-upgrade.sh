@@ -9,7 +9,7 @@ GMAIL_APP_PASSWORD="dxxaabikdjfdkplk"
 
 # Function to log messages
 log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a $LOG_FILE
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | sudo tee -a $LOG_FILE
 }
 
 # Function to send email via Gmail
@@ -41,62 +41,66 @@ handle_error() {
 trap '"handle_error \"Unexpected error occurred at line $LINENO\""' ERR
 
 # Get current Jenkins version
-CURRENT_VERSION=$(jenkins --version)
+log_message "Starting Jenkins upgrade process."
+CURRENT_VERSION=$(sudo jenkins --version)
 log_message "Current Jenkins version: $CURRENT_VERSION"
 
 # Backup Jenkins configuration
 BACKUP_DIR="/var/lib/jenkins/backup_$(date +%Y%m%d_%H%M%S)"
-log_message "Creating backup at $BACKUP_DIR"
-mkdir -p $BACKUP_DIR
-cp -r /var/lib/jenkins/* $BACKUP_DIR/ || handle_error "Backup failed"
+log_message "Creating backup directory at $BACKUP_DIR."
+sudo mkdir -p $BACKUP_DIR
+log_message "Backing up Jenkins configuration files to $BACKUP_DIR."
+sudo cp -r /var/lib/jenkins/* $BACKUP_DIR/ || handle_error "Backup failed. Unable to copy Jenkins configuration files."
 
 # Step 2: Download Jenkins repository key
-log_message "Downloading Jenkins repository key"
-wget -O /usr/share/keyrings/jenkins-keyring.asc \
+log_message "Downloading Jenkins repository key from https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key."
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
     https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key || \
-    handle_error "Failed to download Jenkins key"
+    handle_error "Failed to download Jenkins key."
 
 # Step 3: Add Jenkins repository
-log_message "Adding Jenkins repository"
+log_message "Adding Jenkins repository to the system's package sources."
 echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
     https://pkg.jenkins.io/debian-stable binary/" | \
-    tee /etc/apt/sources.list.d/jenkins.list > /dev/null || \
-    handle_error "Failed to add Jenkins repository"
+    sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null || \
+    handle_error "Failed to add Jenkins repository."
 
 # Step 4: Update package index
-log_message "Updating package index"
-apt update || handle_error "Failed to update package index"
+log_message "Updating the package index to include the new Jenkins repository."
+sudo apt update || handle_error "Failed to update package index."
 
 # Stop Jenkins service
-log_message "Stopping Jenkins service"
-systemctl stop jenkins
+log_message "Stopping Jenkins service to prepare for the upgrade."
+sudo systemctl stop jenkins
 
 # Wait for service to stop completely
+log_message "Waiting for Jenkins service to stop completely."
 sleep 10
 
 # Step 5: Upgrade Jenkins
-log_message "Upgrading Jenkins"
-apt upgrade jenkins -y || handle_error "Failed to upgrade Jenkins"
+log_message "Upgrading Jenkins to the latest version."
+sudo apt upgrade jenkins -y || handle_error "Failed to upgrade Jenkins."
 
 # Step 6: Restart Jenkins service
-log_message "Restarting Jenkins service"
-systemctl restart jenkins || handle_error "Failed to restart Jenkins"
+log_message "Restarting Jenkins service after the upgrade."
+sudo systemctl restart jenkins || handle_error "Failed to restart Jenkins service."
 
 # Wait for Jenkins to start up
-log_message "Waiting for Jenkins to start"
+log_message "Waiting for Jenkins to start. This may take a few minutes."
 MAX_WAIT=300
 WAIT_COUNT=0
 while ! curl -s http://localhost:8080 > /dev/null; do
     sleep 5
     WAIT_COUNT=$((WAIT_COUNT + 5))
+    log_message "Checking if Jenkins is up... (Waited: $WAIT_COUNT seconds)"
     if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
-        handle_error "Jenkins failed to start within 5 minutes"
+        handle_error "Jenkins failed to start within 5 minutes."
     fi
 done
 
 # Get new version
-NEW_VERSION=$(jenkins --version)
-log_message "Upgrade completed successfully. New version: $NEW_VERSION"
+NEW_VERSION=$(sudo jenkins --version)
+log_message "Upgrade completed successfully. New Jenkins version: $NEW_VERSION"
 
 # Send success email
 SUCCESS_MESSAGE="Jenkins upgrade completed successfully.
@@ -108,10 +112,11 @@ Backup location: $BACKUP_DIR
 Log file: $LOG_FILE
 
 All upgrade steps completed successfully:
+- Backup of Jenkins configuration
 - Repository key download
 - Repository configuration
 - Package index update
 - Jenkins upgrade
-- Service restart"
+ - Service restart"
 
 send_email "Jenkins Upgrade Successful" "$SUCCESS_MESSAGE"
