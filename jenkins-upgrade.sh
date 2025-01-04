@@ -49,8 +49,10 @@ log_message "Current Jenkins version: $CURRENT_VERSION"
 BACKUP_DIR="/var/lib/jenkins/backup_$(date +%Y%m%d_%H%M%S)"
 log_message "Creating backup directory at $BACKUP_DIR."
 sudo mkdir -p $BACKUP_DIR
+
 log_message "Backing up Jenkins configuration files to $BACKUP_DIR."
-sudo cp -r /var/lib/jenkins/* $BACKUP_DIR/ || handle_error "Backup failed. Unable to copy Jenkins configuration files."
+# Use rsync to copy files, excluding the backup directory
+sudo rsync -av --exclude='backup_*' /var/lib/jenkins/ $BACKUP_DIR/ || handle_error "Backup failed. Unable to copy Jenkins configuration files."
 
 # Step 2: Download Jenkins repository key
 log_message "Downloading Jenkins repository key from https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key."
@@ -116,7 +118,7 @@ All upgrade steps completed successfully:
 - Repository key download
 - Repository configuration
 - Package index update
-- Jenkins upgrade
- - Service restart"
+ - Jenkins upgrade
+- Service restart"
 
 send_email "Jenkins Upgrade Successful" "$SUCCESS_MESSAGE"
