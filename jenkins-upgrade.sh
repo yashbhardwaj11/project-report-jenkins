@@ -40,14 +40,6 @@ handle_error() {
 # Set error handler
 trap '"handle_error \"Unexpected error occurred at line $LINENO\""' ERR
 
-# Step 1: Check Java version
-log_message "Checking Java version"
-JAVA_VERSION=$(java --version)
-if ! echo "$JAVA_VERSION" | grep -q "version \"17"; then
-    handle_error "Java 17 is required for the latest Jenkins version. Current version: $JAVA_VERSION"
-fi
-log_message "Java version check passed: $JAVA_VERSION"
-
 # Get current Jenkins version
 CURRENT_VERSION=$(jenkins --version)
 log_message "Current Jenkins version: $CURRENT_VERSION"
@@ -111,13 +103,11 @@ SUCCESS_MESSAGE="Jenkins upgrade completed successfully.
 
 Previous version: $CURRENT_VERSION
 New version: $NEW_VERSION
-Java version: $JAVA_VERSION
 
 Backup location: $BACKUP_DIR
 Log file: $LOG_FILE
 
 All upgrade steps completed successfully:
-- Java version verification
 - Repository key download
 - Repository configuration
 - Package index update
