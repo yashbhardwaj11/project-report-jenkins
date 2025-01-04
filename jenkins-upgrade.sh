@@ -69,7 +69,7 @@ echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
 
 # Step 4: Update package index
 log_message "Updating the package index to include the new Jenkins repository."
-sudo apt-get update || handle_error "Failed to update package index."
+sudo apt update || handle_error "Failed to update package index."
 
 # Stop Jenkins service
 log_message "Stopping Jenkins service to prepare for the upgrade."
@@ -77,6 +77,7 @@ sudo systemctl stop jenkins
 
 # Wait for service to stop completely
 log_message "Waiting for Jenkins service to stop completely."
+sleep 10
 
 # Debugging loop to check if the script is running
 log_message "Debugging: Checking if the script is still running."
@@ -87,7 +88,7 @@ done
 
 # Step 5: Upgrade Jenkins
 log_message "Upgrading Jenkins to the latest version."
-sudo apt-get upgrade jenkins -y || handle_error "Failed to upgrade Jenkins."
+sudo apt upgrade jenkins -y || handle_error "Failed to upgrade Jenkins."
 
 # Step 6: Restart Jenkins service
 log_message "Restarting Jenkins service after the upgrade."
@@ -107,7 +108,7 @@ while ! curl -s http://localhost:8080 > /dev/null; do
 done
 
 # Get new version
-NEW_VERSION=$(sudo j enkins --version)
+NEW _VERSION=$(sudo jenkins --version)
 log_message "Upgrade completed successfully. New Jenkins version: $NEW_VERSION"
 
 # Send success email
